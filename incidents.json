@@ -1,0 +1,13 @@
+[
+  {
+    "id": "30ee64d5",
+    "timestamp": "2026-05-13T01:31:45",
+    "texto_original": "El sistema se traba cuando abro la opcion Guardar",
+    "idioma_codigo": "es",
+    "idioma_nombre": "Español",
+    "texto_es": "El sistema se traba cuando abro la opcion Guardar",
+    "categoria": "Técnico",
+    "severidad": "media",
+    "resumen": "El sistema presenta un bloqueo al intentar utilizar la opción Guardar, afectando la funcionalidad del usuario."
+  }
+]
