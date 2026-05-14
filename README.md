@@ -15,7 +15,7 @@ Sistema multilingüe de reporte de incidentes que detecta automáticamente el id
 
 ```bash
 git clone https://github.com/AuraCrz/Voice_to_Ticket
-cd voice-to-ticket
+cd "nombre_carpeta_clonada"
 pip install -r requirements.txt
 ```
 
