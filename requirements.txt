@@ -2,3 +2,5 @@ openai
 langdetect
 deep-translator
 python-dotenv
+pyaudio
+speechRecognition

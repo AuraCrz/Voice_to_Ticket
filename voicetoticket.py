@@ -1,6 +1,7 @@
 import json
 import uuid
 from datetime import datetime
+import time
 from pathlib import Path
 
 import openai, os # LLM
@@ -8,10 +9,10 @@ import dotenv      # Carga variables de entorno desde .env
 
 dotenv.load_dotenv()
 
-# Dependencias gratuitas para idioma y traducción
+# Dependencias gratuitas para idioma, traducción y transcripción de voz
 from langdetect import detect, LangDetectException
 from deep_translator import GoogleTranslator
-
+import speech_recognition as sr
 
 # ----- Configuración -----
 API_KEY      = os.getenv("API_KEY")
@@ -70,6 +71,60 @@ def traducir_a_idioma(texto: str, idioma_destino: str) -> str:
     except Exception as e:
         return f"[Error de traducción: {e}]"
 
+# Transcribe voz a texto usando SpeechRecognition y Google Web Speech API
+def transcripcion_voz(timeout_espera=5, tiempo_maximo=15):
+    recognizer = sr.Recognizer()
+    recognizer.dynamic_energy_threshold = True
+    recognizer.pause_threshold = 1.0
+
+    try:
+        with sr.Microphone() as source:
+            recognizer.adjust_for_ambient_noise(source, duration=1)
+            print("Escuchando...")
+            inicio = time.time()
+            audio = recognizer.listen(
+                source,
+                timeout=timeout_espera,
+                phrase_time_limit=tiempo_maximo
+            )
+
+        texto = recognizer.recognize_google(audio)
+
+        return {
+            "status": "success",
+            "texto": texto,
+            "duracion": round(time.time() - inicio, 2)
+        }
+
+    except sr.WaitTimeoutError:
+        return {
+            "status": "timeout",
+            "texto": "",
+            "duracion": 0
+        }
+
+    except sr.UnknownValueError:
+        return {
+            "status": "no_entendido",
+            "texto": "",
+            "duracion": 0
+        }
+
+    except sr.RequestError as e:
+        return {
+            "status": "error_api",
+            "texto": "",
+            "error": str(e),
+            "duracion": 0
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "texto": "",
+            "error": str(e),
+            "duracion": 0
+        }
 
 # ----- Capa LLM: solo análisis del incidente (texto ya en español) -----
 ''' El prompt ya traducido al español, es procesado por el modelo para extraer:
@@ -100,15 +155,29 @@ def analizar_incidente(texto_es: str) -> dict:
 
 
 # ----- Flujo principal -----
-def registrar_incidente():
+def registrar_incidente(voz=False):
     print("\n" + "═" * 60)
     print("  NUEVO REPORTE DE INCIDENTE")
     print("═" * 60)
-    texto = input("Describe el incidente (en cualquier idioma):\n> ").strip()
 
-    if not texto:
-        print("[!] No ingresaste texto. Cancelado.")
-        return
+    # Entrada de texto o voz
+    if not voz:
+        texto = input("Describe el incidente (en cualquier idioma):\n> ").strip()
+    else:
+        voice_text = transcripcion_voz()
+        status = voice_text.get("status", "")
+        texto = voice_text.get("texto", "")
+        duracion = voice_text.get("duracion", 0)
+        if not texto:
+            print("[!] No se pudo obtener texto. Cancelado.")
+            return
+        else:
+            print(f"  Texto reconocido: {texto}")
+            continuar = input("Continuar? (s/n): ").strip().lower()
+            if continuar not in ("s", "si", "sí", "y", "yes"):
+                print("  Reporte cancelado por el usuario.")
+                return
+       
 
     # Detección de idioma 
     codigo_idioma  = detectar_idioma(texto)
@@ -137,6 +206,8 @@ def registrar_incidente():
     print(f"  Resumen   : {analisis['resumen']}")
     print(f"{'─'*60}")
 
+    #Implementarlo en el futuro junto a un boton para traducir el resumen a otros idiomas, si el usuario lo desea.
+    '''
     # Traducción adicional opcional
     opcion = input("\n¿Deseas ver el resumen en otro idioma? (s/no): ").strip().lower()
     if opcion in ("s", "si", "sí", "y", "yes"):
@@ -145,6 +216,7 @@ def registrar_incidente():
         ).strip().lower()
         traduccion_extra = traducir_a_idioma(analisis["resumen"], idioma_extra)
         print(f"  → {traduccion_extra}")
+    '''
 
     # Guardar
     guardar = input("\n¿Guardar este reporte? (s/no): ").strip().lower()
@@ -153,6 +225,8 @@ def registrar_incidente():
             "id"             : str(uuid.uuid4())[:8],
             "timestamp"      : datetime.now().isoformat(timespec="seconds"),
             "texto_original" : texto,
+            "voz_duracion"   : duracion if voz else None,
+            "voz_status"     : status if voz else None,
             "idioma_codigo"  : codigo_idioma,
             "idioma_nombre"  : nombre_idioma,
             "texto_es"       : texto_es,
@@ -193,9 +267,10 @@ def menu():
     print("═" * 60)
 
     opciones = {
-        "1": ("Registrar nuevo incidente",  registrar_incidente),
-        "2": ("Ver incidentes registrados", listar_incidentes),
-        "3": ("Salir",                      None),
+        "1": ("Registrar nuevo incidente",  lambda: registrar_incidente(voz=False)),
+        "2": ("Registrar nuevo incidente con micrófono", lambda: registrar_incidente(voz=True)),
+        "3": ("Ver incidentes registrados", listar_incidentes),
+        "4": ("Salir",                      None),
     }
 
     while True:
@@ -204,7 +279,7 @@ def menu():
             print(f"  [{k}] {desc}")
         eleccion = input("\n  Opción: ").strip()
 
-        if eleccion == "3":
+        if eleccion == "4":
             print("\n  Hasta luego.\n")
             break
         elif eleccion in opciones:
