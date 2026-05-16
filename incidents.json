@@ -9,5 +9,27 @@
     "categoria": "Técnico",
     "severidad": "media",
     "resumen": "El sistema presenta un bloqueo al intentar utilizar la opción Guardar, afectando la funcionalidad del usuario."
+  },
+  {
+    "id": "5af77cba",
+    "timestamp": "2026-05-14T16:18:31",
+    "texto_original": "Bloqueo de plataformas",
+    "idioma_codigo": "ca",
+    "idioma_nombre": "CA",
+    "texto_es": "Bloqueo de plataformas",
+    "categoria": "Operacional",
+    "severidad": "media",
+    "resumen": "Se reporta el bloqueo de varias plataformas, afectando el acceso de los usuarios a servicios críticos."
+  },
+  {
+    "id": "393c93ea",
+    "timestamp": "2026-05-14T16:23:01",
+    "texto_original": "the system is so low",
+    "idioma_codigo": "en",
+    "idioma_nombre": "Inglés",
+    "texto_es": "el sistema es tan bajo",
+    "categoria": "Técnico",
+    "severidad": "baja",
+    "resumen": "El sistema presenta un rendimiento bajo, afectando la eficiencia de los usuarios."
   }
 ]

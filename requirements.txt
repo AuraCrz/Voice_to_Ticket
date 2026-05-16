@@ -1,4 +1,0 @@
-openai
-langdetect
-deep-translator
-python-dotenv
