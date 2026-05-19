@@ -10,7 +10,14 @@ Sistema multilingüe de reporte de incidentes que detecta automáticamente el id
 - Clasifica la incidencia por **categoría** y **severidad** usando un LLM
 - Genera un resumen estructurado listo para convertirse en ticket
 - Guarda los reportes localmente en un archivo JSON
+- Transcribe un audio a texto
 
+## Requisitos
+Tener instalado previamente:
+```bash
+Python 3.12.x
+Microsoft C++ Build Tools
+```
 ## Instalación
 
 ```bash
@@ -45,9 +52,12 @@ Opciones disponibles en el menú:
 
 ```
 voice-to-ticket/
-├── incident_reporter.py   # Script principal
+├── voicetoticket.py       # Script principal
+├── config.py              # Configuracion inicial de idioma
 ├── incidents.json         # Base de datos local (se crea automáticamente)
+├── settings.json          # Configuracion de idioma local
 ├── requirements.txt       # Dependencias
+├── .gitignore             # Archivo que indica que no debe subir la APIKEY
 └── README.md
 ```
 
