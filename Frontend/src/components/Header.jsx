@@ -1,12 +1,38 @@
+import { useState } from "react"
+import { registrarIncidente } from "../api" // Importamos la conexión con tu backend de Flask
 import {
   ArrowLeft,
   Bell,
   User,
   Search,
   LogOut,
+  Sparkles,
 } from "lucide-react"
 
 function Header({ onLogout }) {
+  const [textoReporte, setTextoReporte] = useState("")
+  const [cargandoIA, setCargandoIA] = useState(false)
+
+  const handleEnviarIncidente = async (e) => {
+    e.preventDefault() // Evita que la página se recargue por completo de forma brusca
+    if (!textoReporte.trim()) return
+
+    setCargandoIA(true)
+    try {
+      // Envía el texto (en cualquier idioma) al backend
+      const respuesta = await registrarIncidente(textoReporte)
+      
+      alert(`¡Ticket #${respuesta.incidente.id} generado por la IA con éxito!\n\nCategoría: ${respuesta.incidente.categoria}\nSeveridad: ${respuesta.incidente.severidad.toUpperCase()}`)
+      
+      setTextoReporte("") // Limpiamos la barra de texto
+      window.location.reload() // Recargamos la ventana para que la tabla del Dashboard jale el nuevo JSON actualizado
+    } catch (error) {
+      console.error("Error al conectar con Flask:", error)
+      alert("No se pudo procesar el incidente: " + error.message)
+    } finally {
+      setCargandoIA(false)
+    }
+  }
 
   return (
     <header className="flex justify-between items-center mb-8">
@@ -27,31 +53,36 @@ function Header({ onLogout }) {
       {/* Right */}
       <div className="flex items-center gap-4">
 
-        {/* Search */}
-        <div className="relative hidden md:block">
-
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        {/* Input de Inteligencia Artificial (Antes era la barra Buscar) */}
+        <form onSubmit={handleEnviarIncidente} className="relative hidden md:block w-80 lg:w-96">
+          
+          {/* Cambiamos la lupa por chispas de IA si está cargando */}
+          {cargandoIA ? (
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          )}
 
           <input
             type="text"
-            placeholder="Buscar..."
-            className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={textoReporte}
+            onChange={(e) => setTextoReporte(e.target.value)}
+            disabled={cargandoIA}
+            placeholder={cargandoIA ? "GPT-4o-mini analizando..." : "Reportar incidente a la IA... (Presiona Enter)"}
+            className={`w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+              cargandoIA ? "bg-slate-50 text-slate-400 cursor-not-allowed" : "bg-white text-slate-800"
+            }`}
           />
-
-        </div>
+        </form>
 
         {/* Notifications */}
         <button className="p-3 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition">
-
           <Bell className="w-5 h-5 text-slate-600" />
-
         </button>
 
         {/* User */}
         <button className="p-3 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition">
-
           <User className="w-5 h-5 text-slate-600" />
-
         </button>
 
         {/* Logout */}
@@ -59,13 +90,10 @@ function Header({ onLogout }) {
           onClick={onLogout}
           className="flex items-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-all duration-300 shadow-sm"
         >
-
           <LogOut className="w-4 h-4" />
-
           <span className="hidden md:inline">
             Cerrar sesión
           </span>
-
         </button>
 
       </div>
@@ -73,5 +101,6 @@ function Header({ onLogout }) {
     </header>
   )
 }
+
 
 export default Header

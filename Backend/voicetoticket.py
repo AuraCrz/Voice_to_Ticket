@@ -2,11 +2,16 @@ import json
 import uuid
 from datetime import datetime
 from pathlib import Path
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 import openai, os # LLM
 import dotenv      # Carga variables de entorno desde .env
 
 dotenv.load_dotenv()
+
+app = Flask(__name__)
+CORS(app)  # Esto le da permiso al Frontend de Vite para conectarse
 
 # Dependencias gratuitas para idioma y traducción
 from langdetect import detect, LangDetectException
@@ -211,7 +216,158 @@ def menu():
             opciones[eleccion][1]()
         else:
             print("  Opción no válida.")
+            
+# ----- Configuración y Persistencia de Usuarios -----
+USERS_FILE = Path("users.json")
 
+def cargar_usuarios() -> list[dict]:
+    if USERS_FILE.exists():
+        return json.loads(USERS_FILE.read_text(encoding="utf-8"))
+    return []
+
+def guardar_usuarios(usuarios: list[dict]) -> None:
+    USERS_FILE.write_text(
+        json.dumps(usuarios, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+# ----- Endpoints de Autenticación para el Frontend -----
+
+@app.route('/api/register', methods=['POST'])
+def api_registrar_usuario():
+    """
+    Registra un usuario nuevo desde la interfaz y lo guarda en users.json
+    """
+    try:
+        data = request.get_json()
+        email = data.get('email', '').strip()
+        password = data.get('password', '').strip()
+
+        if not email or not password:
+            return jsonify({"error": "Correo y contraseña son obligatorios."}), 400
+
+        usuarios = cargar_usuarios()
+
+        # Verificar si el correo ya existe
+        if any(u['email'] == email for u in usuarios):
+            return jsonify({"error": "El correo electrónico ya está registrado."}), 400
+
+        # Crear y guardar el nuevo usuario
+        nuevo_usuario = {
+            "id": str(uuid.uuid4())[:8],
+            "email": email,
+            "password": password  # En producción usa hashing (ej. bcrypt), para entorno local sirve así
+        }
+        
+        usuarios.append(nuevo_usuario)
+        guardar_usuarios(usuarios)
+
+        return jsonify({"message": "Usuario registrado con éxito.", "user": {"email": email}}), 201
+
+    except Exception as e:
+        return jsonify({"error": f"Error en el registro: {str(e)}"}), 500
+
+
+@app.route('/api/login', methods=['POST'])
+def api_login_usuario():
+    """
+    Valida las credenciales del usuario contra el archivo users.json
+    """
+    try:
+        data = request.get_json()
+        email = data.get('email', '').strip()
+        password = data.get('password', '').strip()
+
+        usuarios = cargar_usuarios()
+
+        # Buscar si coinciden correo y contraseña
+        usuario_valido = next((u for u in usuarios if u['email'] == email and u['password'] == password), None)
+
+        if not usuario_valido:
+            return jsonify({"error": "Correo o contraseña incorrectos."}), 401
+
+        # Retornamos éxito y un token ficticio para que React te dé acceso al Dashboard
+        return jsonify({
+            "message": "Inicio de sesión exitoso.",
+            "token": "token-ficticio-asociado-ia",
+            "user": {"email": email}
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": f"Error en el inicio de sesión: {str(e)}"}), 500            
+
+#endpoints para la conexion con el frontend
+
+@app.route('/api/incidentes', methods=['POST'])
+def api_registrar_incidente():
+    """
+    Recibe el texto del incidente enviado desde el frontend en formato JSON,
+    lo procesa con la IA, lo guarda en el archivo local y retorna el resultado.
+    """
+    try:
+        data = request.get_json()
+        
+        # Validar que el frontend envíe el campo 'texto'
+        if not data or 'texto' not in data or not data['texto'].strip():
+            return jsonify({"error": "No se proporcionó la descripción del incidente."}), 400
+        
+        texto = data['texto'].strip()
+
+        # 1. Detección de idioma
+        codigo_idioma = detectar_idioma(texto)
+        nombre_idioma = LANG_NOMBRES.get(codigo_idioma, codigo_idioma.upper())
+
+        # 2. Traducción a español si es necesario
+        if codigo_idioma != LANG_SISTEMA:
+            texto_es = traducir_a_espanol(texto, codigo_idioma)
+        else:
+            texto_es = texto
+
+        # 3. Análisis inteligente con GPT-4o-mini
+        analisis = analizar_incidente(texto_es)
+
+        # 4. Estructurar el objeto del incidente
+        nuevo_incidente = {
+            "id": str(uuid.uuid4())[:8],
+            "timestamp": datetime.now().isoformat(timespec="seconds"),
+            "texto_original": texto,
+            "idioma_codigo": codigo_idioma,
+            "idioma_nombre": nombre_idioma,
+            "texto_es": texto_es,
+            "categoria": analisis.get("categoria", "Otro"),
+            "severidad": analisis.get("severidad", "baja"),
+            "resumen": analisis.get("resumen", "")
+        }
+
+        # 5. Persistencia en el JSON (incidents.json)
+        incidentes = cargar_incidentes()
+        incidentes.append(nuevo_incidente)
+        guardar_incidentes(incidentes)  
+
+        # Retornamos el incidente creado para que el Frontend lo muestre de inmediato
+        return jsonify({
+            "message": "Incidente registrado con éxito",
+            "incidente": nuevo_incidente
+        }), 201
+
+    except Exception as e:
+        return jsonify({"error": f"Error interno en el servidor: {str(e)}"}), 500
+
+
+@app.route('/api/incidentes', methods=['GET'])
+def api_listar_incidentes():
+    """
+    Retorna la lista completa de todos los incidentes guardados para
+    que el Dashboard de Berenice pueda pintarlos en una tabla o gráficas.
+    """
+    try:
+        incidentes = cargar_incidentes()
+        return jsonify(incidentes), 200
+    except Exception as e:
+        return jsonify({"error": f"No se pudieron cargar los datos: {str(e)}"}), 500
 
 if __name__ == "__main__":
-    menu()
+    #menu()
+    # Cambiamos menu() por app.run para arrancar el servidor de la API
+    print("Iniciando Servidor Flask en http://localhost:5000 ...")
+    app.run(port=5000, debug=True)

@@ -7,33 +7,65 @@ function Login({ onLogin }) {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e) => {
-  e.preventDefault()
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setIsLoading(true)
 
-  setIsLoading(true)
+    const endpoint = isRegisterMode ? '/api/register' : '/api/login'
 
-  // Usuario de prueba//
-  const testEmail = "admin@voiceticket.com"
-  const testPassword = "123456"
+    try {
+      const respuesta = await fetch('http://localhost:5000/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
 
-  setTimeout(() => {
+      const datos = await respuesta.json()
 
-    if (email === testEmail && password === testPassword) {
-
-      console.log("Login correcto")
-
-      onLogin()
-
-    } else {
-
-      alert("Correo o contraseña incorrectos")
-
+      if (respuesta.ok) {
+        console.log("Login correcto:", datos)
+        onLogin() // Cambia la vista al Dashboard
+      } else {
+        alert(datos.error || "Credenciales incorrectas")
+      }
+    } catch (error) {
+      console.error("Error al conectar con el servidor:", error)
+      alert("No se pudo conectar con el servidor de autenticación")
+    } finally {
+      setIsLoading(false)
     }
+  }
 
-    setIsLoading(false)
-
-  }, 1500)
-}
+  // Función rápida para registrarse directamente usando los mismos campos del formulario
+  const handleDirectRegister = async () => {
+    if (!email || !password) {
+      alert("Por favor, escribe un correo y contraseña primero en los campos de arriba.")
+      return
+    }
+    
+    setIsLoading(true)
+    try {
+      const respuesta = await fetch('http://localhost:5000/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      
+      const datos = await respuesta.json()
+      
+      if (respuesta.ok) {
+        alert("Usuario registrado con éxito.")
+      } else {
+        alert(datos.error || "Error al registrar")
+      }
+    } catch (error) {
+      alert("No se pudo conectar con el servidor para registrar")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen flex">
@@ -148,12 +180,16 @@ function Login({ onLogin }) {
             </button>
           </form>
 
-          {/* Registro */}
+          {/* Registro Directo Modificado */}
           <p className="text-center text-gray-600 mt-8">
             ¿No tienes una cuenta?{" "}
-            <a href="#" className="text-blue-600 hover:text-blue-700 font-semibold">
+            <button
+              type="button"
+              onClick={handleDirectRegister} // Al dar clic aquí, llama a la API de registro de Flask de inmediato
+              className="text-blue-600 hover:text-blue-700 font-semibold focus:outline-none underline"
+            >
               Regístrate aquí
-            </a>
+            </button>
           </p>
         </div>
       </div>

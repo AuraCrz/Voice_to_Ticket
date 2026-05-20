@@ -1,3 +1,22 @@
+# ==========================================
+# Exclusiones para el Backend
+# ==========================================
+Backend/.env
 .env
-__pycache__/
-*.pyc
+Backend/__pycache__/
+Backend/*.pyc
+Backend/incidents.json   # (Opcional) Si no quieres subir los tickets de prueba locales
+
+# ==========================================
+# Exclusiones para el Frontend
+# ==========================================
+Frontend/node_modules/
+Frontend/dist/
+Frontend/.env
+Frontend/.env.local
+
+# ==========================================
+# Archivos globales del sistema o IDE
+# ==========================================
+.DS_Store
+.vscode/
