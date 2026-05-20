@@ -40,10 +40,13 @@ $env:OPENAI_API_KEY="sk-..."
 ## Uso
 
 ```bash
-python voicetoticket.py
+cd backend
+python main.py
+uvicorn main:app --reload
+Documentación interactiva en: http://localhost:8000/docs (click)
 ```
 
-Opciones disponibles en el menú:
+Opciones previas en el menú:
 1. Registrar nuevo incidente
 2. Ver incidentes registrados
 3. Salir
@@ -51,14 +54,28 @@ Opciones disponibles en el menú:
 ## Estructura del proyecto
 
 ```
-voice-to-ticket/
-├── voicetoticket.py       # Script principal
-├── config.py              # Configuracion inicial de idioma
-├── incidents.json         # Base de datos local (se crea automáticamente)
-├── settings.json          # Configuracion de idioma local
-├── requirements.txt       # Dependencias
-├── .gitignore             # Archivo que indica que no debe subir la APIKEY
-└── README.md
+voiceticket/
+├── backend/
+│   ├── data/                   # Bases de datos locales (se crean automáticamente)
+│   │   ├── incidents.json
+│   │   └── settings.json
+│   ├── models/                 # Modelos Pydantic
+│   │   └── schemas.py          
+│   ├── routers/                # Endpoints
+│   │   ├── configuracion.py
+│   │   └── incidentes.py
+│   ├── services/               # Realiza el proceso del incidente
+│   │   ├── llm.py
+│   │   ├── traduccion.py
+│   │   └── voz.py
+│   ├── config.py               # Configuracion inicial de idioma
+│   └── main.py                 # Script principal
+|
+├── frontend/                   # Falta complementarlo...
+│
+├── .gitignore                  # Archivo que indica que no debe subir la APIKEY
+├── README.md
+└── requirements.txt            # Dependencias
 ```
 
 ## Decisiones de diseño del MVP
