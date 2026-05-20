@@ -8,7 +8,8 @@ import json
 from pathlib import Path
 
 # ----- Archivos -----
-SETTINGS_FILE = Path("settings.json")
+BASE_DIR      = Path(__file__).parent
+SETTINGS_FILE = BASE_DIR / "data" / "settings.json"
 
 # ----- Idiomas disponibles -----
 # Nombres legibles para mostrar al usuario

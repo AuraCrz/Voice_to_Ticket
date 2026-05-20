@@ -4,3 +4,7 @@ deep-translator
 python-dotenv
 pyaudio
 speechRecognition
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
