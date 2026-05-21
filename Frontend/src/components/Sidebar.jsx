@@ -8,7 +8,7 @@ import {
   LogOut  
 } from "lucide-react"
 
-function Sidebar({ onLogout }) { 
+function Sidebar({ onLogout, onNewReport }) { 
   return (
     <aside className="w-72 bg-slate-900 min-h-screen text-white p-6 flex flex-col">
       <div className="mb-12">
@@ -27,7 +27,10 @@ function Sidebar({ onLogout }) {
           Dashboard
         </button>
 
-        <button className="flex items-center gap-3 hover:bg-slate-800 transition-all duration-300 w-full p-4 rounded-2xl">
+        <button
+          onClick={onNewReport}
+          className="flex items-center gap-3 hover:bg-slate-800 transition-all duration-300 w-full p-4 rounded-2xl"
+        >
           <Mic />
           Nuevo Reporte
         </button>

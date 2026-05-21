@@ -1,5 +1,4 @@
 import {
-  ArrowLeft,
   Bell,
   User,
   Search,
