@@ -14,7 +14,7 @@ Sistema multilingüe de reporte de incidentes que detecta automáticamente el id
 ## Instalación
 
 ```bash
-git clone https://github.com/AuraCrz/Voice_to_Ticket
+git clone https://github.com/Voice_to_Ticket
 cd "nombre_carpeta_clonada"
 pip install -r requirements.txt
 ```
@@ -61,7 +61,7 @@ voice-to-ticket/
 
 El MVP es la primera iteración de un sistema más amplio que incluirá:
 
-- **Frontend** React con soporte de voz y texto
+- **Frontend** Vue con soporte de voz y texto
 - **Backend** Flask / AWS API Gateway
 - **Speech-to-Text** con AWS Transcribe
 - **Confidence Validator** para decidir si un reporte tiene suficiente información antes de crear el ticket

@@ -1,6 +1,6 @@
 # Frontend - Voice to Ticket AI
 
-Interfaz web en React + Vite para el proyecto Voice to Ticket AI.
+Interfaz web en Vue + Vite para el proyecto Voice to Ticket AI.
 
 ## Requisitos
 
@@ -88,11 +88,16 @@ Frontend/
 +-- src/
 |   +-- assets/
 |   +-- components/
+|   |   +-- Header.vue
+|   |   +-- Login.vue
+|   |   +-- NewReportModal.vue
+|   |   +-- Sidebar.vue
+|   |   +-- StatsCard.vue
 |   +-- pages/
-|   +-- App.jsx
-|   +-- App.css
+|   |   +-- Dashboard.vue
+|   +-- App.vue
 |   +-- index.css
-|   +-- main.jsx
+|   +-- main.js
 +-- index.html
 +-- package.json
 +-- vite.config.js

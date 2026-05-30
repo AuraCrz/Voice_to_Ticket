@@ -1,4 +1,7 @@
+fastapi
+uvicorn
 openai
+python-dotenv
 langdetect
 deep-translator
-python-dotenv
+pydantic
